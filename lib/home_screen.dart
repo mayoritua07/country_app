@@ -19,7 +19,6 @@ class _MyHomePageState extends State<MyHomePage> {
   List activeCountriesData = [];
   Map<String, String> acceptedLanguages = {
     "Arabic ": "ara",
-    "Chinese": "zho",
     "Deutschland": "deu",
     "Dutch": "nld",
     "English": "eng",
@@ -29,14 +28,38 @@ class _MyHomePageState extends State<MyHomePage> {
     "Italian": "ita",
     "Japanese": "jpn",
     "Korean": "kor",
-    "Persian": "per",
     "Portuguese": "por",
     "Russian": "rus",
     "Spanish": "spa",
     "Swedish": "swe",
     "Turkish": "tur",
   };
-  List filtersList = [];
+  List<String> continents = [
+    "Africa",
+    "Antarctica",
+    "Asia",
+    "Australia",
+    "Europe",
+    "North America",
+    "South America",
+  ];
+  List<String> timeZones = [
+    "UTC-06:00",
+    "UTC-05:00",
+    "UTC-04:00",
+    "UTC-03:00",
+    "UTC-02:00",
+    "UTC-01:00",
+    "UTC",
+    "UTC+01:00",
+    "UTC+02:00",
+    "UTC+03:00",
+    "UTC+04:00",
+    "UTC+05:00",
+    "UTC+06:00",
+  ];
+  List timezoneFilters = [];
+  List continentFilters = [];
 
   void showDetalsScreen(Map countryDetails) {
     Navigator.of(context).push(
@@ -169,7 +192,183 @@ class _MyHomePageState extends State<MyHomePage> {
         });
   }
 
-  void selectFilters() {}
+  List filter() {
+    List newList = List.from(countriesData);
+
+    bool isInTimeZone(item) {
+      for (final timeZone in timezoneFilters) {
+        if ((item["timezones"] as List).contains(timeZone)) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    if (continentFilters.isNotEmpty || timezoneFilters.isNotEmpty) {
+      newList = newList.where((item) {
+        return continentFilters.contains(item["continents"][0]) ||
+            (isInTimeZone(item));
+      }).toList();
+    }
+
+    newList = sortMyList(newList, language);
+
+    return newList;
+  }
+
+  void showResults() {
+    setState(
+      () {
+        activeCountriesData = filter();
+      },
+    );
+  }
+
+  void resetFilters() {
+    setState(
+      () {
+        continentFilters.clear();
+        timezoneFilters.clear();
+        showResults();
+      },
+    );
+  }
+
+  selectFilters() {
+    showModalBottomSheet(
+      constraints: BoxConstraints(minWidth: double.infinity, minHeight: 200),
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, updateState) {
+            return IntrinsicHeight(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          children: [
+                            ExpansionTile(
+                              title: Text("Continent"),
+                              children: continents.map(
+                                (item) {
+                                  return Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(item),
+                                        Checkbox(
+                                            value:
+                                                continentFilters.contains(item),
+                                            onChanged: (val) {
+                                              updateState(
+                                                () {
+                                                  setState(
+                                                    () {
+                                                      if (val == true) {
+                                                        continentFilters
+                                                            .add(item);
+                                                      } else {
+                                                        continentFilters
+                                                            .remove(item);
+                                                      }
+                                                    },
+                                                  );
+                                                },
+                                              );
+                                            })
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ).toList(),
+                            ),
+                            ExpansionTile(
+                              title: Text("Time Zone"),
+                              children: timeZones.map((item) {
+                                return Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(item),
+                                    Checkbox(
+                                        value: timezoneFilters.contains(item),
+                                        onChanged: (val) {
+                                          updateState(
+                                            () {
+                                              setState(() {
+                                                if (val == true) {
+                                                  timezoneFilters.add(item);
+                                                } else {
+                                                  timezoneFilters.remove(item);
+                                                }
+                                              });
+                                            },
+                                          );
+                                        })
+                                  ],
+                                );
+                              }).toList(),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8))),
+                          onPressed: () {
+                            setState(() {
+                              resetFilters();
+                            });
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 12.0, horizontal: 18),
+                            child: Text("Reset"),
+                          ),
+                        ),
+                        ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                                backgroundColor: Theme.of(context)
+                                    .colorScheme
+                                    .primaryContainer,
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8))),
+                            onPressed: () {
+                              setState(() {
+                                showResults();
+                                Navigator.of(context).pop();
+                              });
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 12.0, horizontal: 30),
+                              child: Text("Show Results"),
+                            ))
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -202,8 +401,8 @@ class _MyHomePageState extends State<MyHomePage> {
                   activeCountriesData = activeCountriesData.where((item) {
                     String name = language == "eng"
                         ? item["name"]["common"]
-                        : item["translations"][language]["name"];
-                    return name.contains(value);
+                        : item["translations"][language]["common"];
+                    return name.toLowerCase().contains(value.toLowerCase());
                   }).toList();
                 });
               },
@@ -243,20 +442,21 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
                 Container(
                   decoration: BoxDecoration(
-                    color: filtersList.isEmpty
-                        ? null
-                        : Theme.of(context).colorScheme.tertiary.withAlpha(65),
+                    color: continentFilters.isNotEmpty ||
+                            timezoneFilters.isNotEmpty
+                        ? Theme.of(context).colorScheme.secondaryContainer
+                        : null,
                     border: Border.all(
                         color: Theme.of(context).colorScheme.primaryContainer),
                     borderRadius: BorderRadius.circular(4),
                   ),
-                  // child: TextButton.icon(
-                  //   onPressed: selectFilters,
-                  //   label: Text(
-                  //     "Filters",
-                  //   ),
-                  //   icon: Icon(Icons.filter_alt_outlined),
-                  // ),
+                  child: TextButton.icon(
+                    onPressed: selectFilters,
+                    label: Text(
+                      "Filters",
+                    ),
+                    icon: Icon(Icons.filter_alt_outlined),
+                  ),
                 )
               ],
             ),
@@ -271,17 +471,31 @@ class _MyHomePageState extends State<MyHomePage> {
                           child: Text("Unable to load content at the moment"),
                         );
                       }
+                      if (activeCountriesData.isEmpty) {
+                        return Center(
+                          child: Text(
+                            "No results match your search!",
+                            style: TextStyle(
+                                fontSize: 20, fontWeight: FontWeight.w600),
+                          ),
+                        );
+                      }
                       return ListView.builder(
                           itemCount: activeCountriesData.length,
                           itemBuilder: (BuildContext context, int index) {
                             final capitalList =
                                 activeCountriesData[index]["capital"];
-                            String countryName =
-                                activeCountriesData[index]["name"]["common"];
+                            String countryName = language == "eng"
+                                ? activeCountriesData[index]["name"]["common"]
+                                : activeCountriesData[index]["translations"]
+                                    [language]["common"];
                             final previousFirstLetter = index == 0
                                 ? ""
-                                : activeCountriesData[index - 1]["name"]
-                                    ["common"][0];
+                                : language == "eng"
+                                    ? activeCountriesData[index - 1]["name"]
+                                        ["common"][0]
+                                    : activeCountriesData[index - 1]
+                                        ["translations"][language]["common"][0];
                             final currentFirstLetter = countryName[0];
                             List<Widget> childrenWidget = [
                               if (previousFirstLetter != currentFirstLetter)
