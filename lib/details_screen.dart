@@ -2,7 +2,6 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:countries_app/main.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import "package:flutter_map/flutter_map.dart";
 
 class DetailsScreen extends StatelessWidget {
   const DetailsScreen({super.key, required this.countryDetails});
@@ -78,15 +77,6 @@ class DetailsScreen extends StatelessWidget {
                     coatOfArmsUrl,
                     fit: BoxFit.cover,
                   ),
-                // FlutterMap(
-                //   options: const MapOptions(),
-                //   children: [
-                //     TileLayer(
-                //       urlTemplate: mapUrl,
-                //       userAgentPackageName: "com.example",
-                //     ),
-                //   ],
-                // )
               ],
               options: CarouselOptions(
                 viewportFraction: 1,
